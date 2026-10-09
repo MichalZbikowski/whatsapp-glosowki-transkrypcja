@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pl">
+<meta charset="utf-8">
+<title>Transkrypcja głosówek</title>
+<style>
+  body { width: 380px; margin: 0; padding: 12px; font: 13px/1.45 system-ui, sans-serif; }
+  h1 { font-size: 15px; margin: 0 0 8px; }
+  button { cursor: pointer; padding: 4px 10px; }
+  #bar { height: 4px; background: #ccc; margin-top: 8px; border-radius: 2px; overflow: hidden; }
+  #bar i { display: block; height: 100%; width: 0; background: #00a884; }
+  #err { color: #c62828; white-space: pre-wrap; margin-top: 6px; }
+  #out p { margin: 6px 0; user-select: text; }
+  .muted { opacity: .7; }
+</style>
+<h1>Transkrypcja pliku audio</h1>
+<p class="muted">Wrzuć plik .ogg / .opus / .mp3 / .m4a (np. gdy nie da się przechwycić z WhatsAppa).</p>
+<input id="file" type="file" accept=".ogg,.opus,.mp3,.m4a,.wav,audio/*">
+<div id="status" class="muted" style="margin-top:8px"></div>
+<div id="bar" hidden><i></i></div>
+<div id="err"></div>
+<div id="out"></div>
+<p><button id="copy" hidden>Kopiuj</button> <button id="tab">Otwórz w karcie</button> <button id="opts">Ustawienia</button></p>
+<script type="module" src="popup.js"></script>

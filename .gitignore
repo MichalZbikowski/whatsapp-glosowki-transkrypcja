@@ -1,0 +1,14 @@
+﻿test-audio/
+.wa-profile/
+node_modules/
+dist/
+*.key
+.env
+.env.*
+secrets.*
+.tmp-profile*/
+.wa-logged-in
+.tmp-*
+*.zip
+docs/screenshots/
+tests/fixtures/sample.ogg

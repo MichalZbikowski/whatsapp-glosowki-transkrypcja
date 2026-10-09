@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Transkrypcja głosówek WhatsApp",
+  "version": "0.1.0",
+  "description": "Dodaje przycisk „Transkrybuj” do głosówek na WhatsApp Web. Domyślnie lokalnie (Whisper w przeglądarce).",
+  "minimum_chrome_version": "116",
+  "permissions": ["offscreen", "storage", "unlimitedStorage"],
+  "host_permissions": [
+    "https://web.whatsapp.com/*",
+    "https://huggingface.co/*",
+    "https://*.huggingface.co/*",
+    "https://*.hf.co/*",
+    "https://api.groq.com/*",
+    "https://api.anthropic.com/*"
+  ],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_popup": "popup.html", "default_title": "Transkrypcja głosówek" },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["main-world.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
+}

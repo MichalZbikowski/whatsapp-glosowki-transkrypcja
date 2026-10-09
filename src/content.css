@@ -1,0 +1,39 @@
+/* Karta transkrypcji w stylu dymka WhatsApp (jasny/ciemny motyw). */
+.wat-box {
+  --wat-bg: #ffffff; --wat-fg: #111b21; --wat-muted: #667781; --wat-accent: #00a884; --wat-line: rgba(11, 20, 26, .12);
+  box-sizing: border-box; width: fit-content; min-width: 220px; max-width: min(460px, 80%);
+  margin: 2px 63px 6px 20px; padding: 8px 12px 9px;
+  background: var(--wat-bg); color: var(--wat-fg);
+  border-radius: 8px; box-shadow: 0 1px .5px rgba(11, 20, 26, .13);
+  font: 14.2px/19px "Segoe UI", Helvetica Neue, Helvetica, system-ui, sans-serif;
+}
+.wat-box.wat-out { --wat-bg: #d9fdd3; margin: 2px 20px 6px auto; }
+.dark .wat-box, html.dark .wat-box, body.dark .wat-box {
+  --wat-bg: #202c33; --wat-fg: #e9edef; --wat-muted: #8696a0; --wat-line: rgba(233, 237, 239, .14);
+}
+.dark .wat-box.wat-out, body.dark .wat-box.wat-out { --wat-bg: #005c4b; }
+
+.wat-head { display: flex; align-items: center; gap: 10px; min-height: 24px; }
+.wat-btn {
+  cursor: pointer; border: 0; background: transparent; color: var(--wat-accent);
+  font: inherit; font-weight: 500; padding: 2px 0; border-radius: 4px;
+}
+.wat-btn:hover { text-decoration: underline; }
+.wat-btn:focus-visible { outline: 2px solid var(--wat-accent); outline-offset: 2px; }
+.wat-btn[disabled] { opacity: .55; cursor: default; text-decoration: none; }
+.wat-status { color: var(--wat-muted); font-size: 12.5px; }
+
+.wat-bar { height: 3px; background: var(--wat-line); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.wat-bar > i { display: block; height: 100%; width: 0; background: var(--wat-accent); transition: width .3s; }
+
+.wat-err { color: #ea0038; margin-top: 6px; font-size: 13px; white-space: pre-wrap; }
+.dark .wat-err, body.dark .wat-err { color: #ff7a8a; }
+
+.wat-text { margin-top: 2px; }
+.wat-text p { margin: 6px 0 0; user-select: text; white-space: pre-wrap; }
+.wat-text:empty { display: none; }
+.wat-copy { margin-top: 8px; font-size: 13px; }
+
+.wat-tldr { margin-top: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--wat-line); }
+.wat-tldr summary { cursor: pointer; font-weight: 500; color: var(--wat-accent); }
+.wat-tldr div { margin-top: 4px; white-space: pre-wrap; user-select: text; }
