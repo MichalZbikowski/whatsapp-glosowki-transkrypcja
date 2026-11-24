@@ -9,6 +9,7 @@ const timeoutMs = Number(process.env.TIMEOUT_MS || 40 * 60 * 1000);
 
 const { ctx, extId } = await launch({ profile: './.tmp-profile-pipe', extra: process.env.EXTRA ? process.env.EXTRA.split(' ') : [] });
 const errors = [];
+ctx.on('page', (p) => p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log('[konsola]', m.text().slice(0, 1500)); }));
 const page = await ctx.newPage();
 page.on('pageerror', (e) => errors.push(e.message));
 await page.goto(`chrome-extension://${extId}/popup.html`);

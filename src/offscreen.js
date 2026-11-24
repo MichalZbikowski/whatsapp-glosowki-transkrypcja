@@ -36,8 +36,8 @@ function dtypeFor(device, encoderDtype) {
     : { encoder_model: 'q4', decoder_model_merged: 'q4' };
 }
 
-async function loadAsr(jobId, settings) {
-  const preferred = await pickDevice();
+async function loadAsr(jobId, settings, forceDevice) {
+  const preferred = forceDevice || await pickDevice();
   const key = `${preferred}|${settings.encoderDtype}`;
   if (asrPromise && asrKey === key) return asrPromise;
   asrKey = key;
@@ -72,6 +72,14 @@ async function loadAsr(jobId, settings) {
   })();
   asrPromise.catch(() => { asrPromise = null; });
   return asrPromise;
+}
+
+// Po błędzie wyrzuca uszkodzony potok, żeby kolejne zadanie wczytało model od nowa.
+async function resetAsr() {
+  const p = asrPromise;
+  asrPromise = null;
+  asrKey = '';
+  try { const a = await p; if (a && a.dispose) await a.dispose(); } catch { /* ignoruj */ }
 }
 
 async function decode(bytes) {
@@ -119,28 +127,43 @@ async function run(m) {
     send({ type: 'progress', jobId, label: 'Dekodowanie audio…', pct: 1 });
     const audio = await decode(b64ToBytes(m.b64));
     if (audio.length < SR * 0.3) throw new Error('Nagranie jest puste lub zbyt krótkie.');
-    const tl = performance.now();
-    const asr = await loadAsr(jobId, m.settings);
-    const loadSeconds = (performance.now() - tl) / 1000;
-    const segs = splitSegments(audio);
     const total = audio.length;
-    let done = 0;
-    const texts = [];
-    const t0 = performance.now();
-    for (let i = 0; i < segs.length; i++) {
-      const pct = 5 + (done / total) * 94;
-      send({ type: 'progress', jobId, label: `Transkrypcja (${asr.__device}) ${Math.round(pct)}%`, pct });
-      const out = await asr(segs[i], {
-        language: 'polish', task: 'transcribe', chunk_length_s: 30, stride_length_s: 5, return_timestamps: false,
-      });
-      texts.push((out.text || '').trim());
-      done += segs[i].length;
+    const segs = splitSegments(audio);
+    let force = null;
+    let res;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let asr;
+      try {
+        const tl = performance.now();
+        asr = await loadAsr(jobId, m.settings, force);
+        const loadSeconds = (performance.now() - tl) / 1000;
+        let done = 0;
+        const texts = [];
+        const t0 = performance.now();
+        for (let i = 0; i < segs.length; i++) {
+          const pct = 5 + (done / total) * 94;
+          send({ type: 'progress', jobId, label: `Transkrypcja (${asr.__device}) ${Math.round(pct)}%`, pct });
+          const out = await asr(segs[i], {
+            language: 'polish', task: 'transcribe', chunk_length_s: 30, stride_length_s: 5, return_timestamps: false,
+          });
+          texts.push((out.text || '').trim());
+          done += segs[i].length;
+        }
+        res = {
+          text: texts.join(' ').replace(/\s+/g, ' ').trim(),
+          stats: { loadSeconds, audioSeconds: total / SR, seconds: (performance.now() - t0) / 1000, device: asr.__device, segments: segs.length },
+        };
+        break;
+      } catch (e) {
+        console.warn('Próba', attempt + 1, 'nie powiodła się', e);
+        if (attempt === 1) throw e;
+        const wasGpu = !asr || asr.__device === 'webgpu';
+        await resetAsr();
+        force = wasGpu ? 'wasm' : null;
+        send({ type: 'progress', jobId, label: wasGpu ? 'Błąd GPU – ponawiam na CPU (wolniej)…' : 'Błąd modelu – ładuję go od nowa…', pct: 2 });
+      }
     }
-    const secs = (performance.now() - t0) / 1000;
-    send({
-      type: 'result', jobId, text: texts.join(' ').replace(/\s+/g, ' ').trim(),
-      stats: { loadSeconds, audioSeconds: total / SR, seconds: secs, device: asr.__device, segments: segs.length },
-    });
+    send({ type: 'result', jobId, ...res });
   } catch (e) {
     console.error(e);
     send({ type: 'error', jobId, error: friendlyError(e) });
